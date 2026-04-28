@@ -166,12 +166,18 @@ export default function CanvasEditor({ project }) {
           setActiveTool={(tool) => {
             setActiveTool(tool);
             if (fabricRef.current) {
-              fabricRef.current.isDrawingMode = tool === "draw";
+              const canvas = fabricRef.current;
+              canvas.isDrawingMode = tool === "draw";
+              
               if (tool === "draw") {
-                fabricRef.current.freeDrawingBrush = new fabric.PencilBrush(fabricRef.current);
-                fabricRef.current.freeDrawingBrush.width = 5;
-                fabricRef.current.freeDrawingBrush.color = "#3B82F6";
+                canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                canvas.freeDrawingBrush.width = 4;
+                canvas.freeDrawingBrush.color = "#3B82F6";
+                canvas.defaultCursor = "crosshair";
+              } else {
+                canvas.defaultCursor = "default";
               }
+              canvas.renderAll();
             }
           }} 
           canvas={fabricRef.current} 
