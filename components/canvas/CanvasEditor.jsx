@@ -122,9 +122,47 @@ export default function CanvasEditor({ project }) {
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // History Management (Refined)
+  const saveHistory = useCallback(() => {
+    if (!fabricRef.current) return;
+    const json = JSON.stringify(fabricRef.current.toJSON());
+    
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Don't save duplicate states
+      if (newHistory[newHistory.length - 1] === json) return prev;
+      return [...newHistory, json];
+    });
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex]);
+
+  const undo = () => {
+    if (historyIndex <= 0 || !fabricRef.current) return;
+    const prevIndex = historyIndex - 1;
+    const state = JSON.parse(history[prevIndex]);
+    
+    fabricRef.current.loadFromJSON(state).then(() => {
+      fabricRef.current.renderAll();
+      setHistoryIndex(prevIndex);
+    });
+  };
+
+  const redo = () => {
+    if (historyIndex >= history.length - 1 || !fabricRef.current) return;
+    const nextIndex = historyIndex + 1;
+    const state = JSON.parse(history[nextIndex]);
+    
+    fabricRef.current.loadFromJSON(state).then(() => {
+      fabricRef.current.renderAll();
+      setHistoryIndex(nextIndex);
+    });
+  };
+
   const loadTemplate = (templateJson) => {
     if (!fabricRef.current) return;
-    fabricRef.current.loadFromJSON(templateJson, () => {
+    fabricRef.current.clear();
+    fabricRef.current.backgroundColor = "#1A1A1A";
+    fabricRef.current.loadFromJSON(templateJson).then(() => {
       fabricRef.current.renderAll();
       saveHistory();
       setIsTemplatesOpen(false);
@@ -133,12 +171,12 @@ export default function CanvasEditor({ project }) {
 
   const handleGenerate = () => {
     setIsGenerating(true);
-    // Simulation of AI processing
+    // Real-time "AI Processing" simulation
     setTimeout(() => {
+       // This will be the point where we pass data to M6 (AI Engine)
        setIsGenerating(false);
-       // In next milestone, redirect to preview/code
-       alert("AI is analyzing your sketch... Redirecting to generation engine.");
-    }, 3000);
+       alert("Design Analysis Complete! Milestone 6 will now take this JSON and turn it into a Website.");
+    }, 4000);
   };
 
   // Zoom implementation
@@ -148,7 +186,43 @@ export default function CanvasEditor({ project }) {
   }, [zoom]);
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0A0A]">
+    <div className="flex flex-col h-full bg-[#0A0A0A] relative">
+      {/* AI Analyzing Overlay */}
+      <AnimatePresence>
+        {isGenerating && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[200] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center text-center p-6"
+          >
+             <div className="relative w-32 h-32 mb-8">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-t-2 border-blue-500 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                />
+                <div className="absolute inset-4 border-r-2 border-blue-400/30 rounded-full animate-reverse-spin" />
+                <Sparkles className="absolute inset-0 m-auto text-blue-500 animate-pulse" size={40} />
+             </div>
+             <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Analyzing Design</h2>
+             <p className="text-zinc-500 max-w-xs text-sm font-medium">
+                Our Neural Engine is scanning your sketches to generate high-fidelity code components...
+             </p>
+             <div className="mt-8 flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <motion.div 
+                    key={i}
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-1.5 h-1.5 bg-blue-500 rounded-full"
+                  />
+                ))}
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Toolbar 
         project={project} 
         onUndo={undo} 
@@ -192,12 +266,11 @@ export default function CanvasEditor({ project }) {
            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50">
               <Button 
                 onClick={handleGenerate}
-                disabled={isGenerating}
                 className="bg-blue-600 hover:bg-blue-700 h-14 px-8 rounded-full shadow-[0_0_40px_rgba(59,130,246,0.4)] flex gap-3 group transition-all hover:scale-105 active:scale-95"
               >
-                 {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles className="group-hover:rotate-12 transition-transform" />}
+                 <Sparkles className="group-hover:rotate-12 transition-transform" />
                  <span className="font-black tracking-tight text-lg uppercase">
-                    {isGenerating ? "Analyzing Design..." : "Generate Website"}
+                    Generate Website
                  </span>
                  <div className="bg-white/20 px-2 py-1 rounded-md text-[10px] font-bold">AI</div>
               </Button>
@@ -252,4 +325,5 @@ export default function CanvasEditor({ project }) {
     </div>
   );
 }
+
 
