@@ -8,7 +8,7 @@ import Toolbar from "./Toolbar";
 import { firestore as db } from "@/lib/firebase/config";
 import { doc, updateDoc } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Monitor, Smartphone, Loader2 } from "lucide-react";
+import { Sparkles, Monitor, Smartphone, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function CanvasEditor({ project }) {
