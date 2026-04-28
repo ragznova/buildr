@@ -17,13 +17,17 @@ export const metadata = {
   description: "Build websites and mobile apps by drawing, speaking, typing, uploading photos, videos, screenshots, or pasting URLs. No coding needed.",
 };
 
+import AuthProvider from "@/components/providers/AuthProvider";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
