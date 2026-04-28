@@ -68,35 +68,7 @@ export default function CanvasEditor({ project }) {
     };
   }, [project]);
 
-  // History Management
-  const saveHistory = useCallback(() => {
-    if (!fabricRef.current) return;
-    const json = fabricRef.current.toJSON();
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(json);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
-
-  const undo = () => {
-    if (historyIndex <= 0) return;
-    const prevIndex = historyIndex - 1;
-    fabricRef.current.loadFromJSON(history[prevIndex], () => {
-      fabricRef.current.renderAll();
-      setHistoryIndex(prevIndex);
-    });
-  };
-
-  const redo = () => {
-    if (historyIndex >= history.length - 1) return;
-    const nextIndex = historyIndex + 1;
-    fabricRef.current.loadFromJSON(history[nextIndex], () => {
-      fabricRef.current.renderAll();
-      setHistoryIndex(nextIndex);
-    });
-  };
-
-  // Save to Firebase
+  // --- Save to Firebase ---
   const saveCanvas = async () => {
     if (!fabricRef.current || !project?.id) return;
     setIsSaving(true);
