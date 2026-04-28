@@ -1,14 +1,30 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { auth } from "@/lib/firebase/config";
+import { sendEmailVerification } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardPage() {
   const { user, userData, loading, logout } = useAuthStore();
   const router = useRouter();
+  const [resending, setResending] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await sendEmailVerification(auth.currentUser);
+      setMessage("Verification email sent!");
+    } catch (err) {
+      setMessage("Error sending email.");
+    } finally {
+      setResending(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,6 +45,30 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-4xl mx-auto">
+        {/* Email Verification Banner */}
+        {!user.emailVerified && (
+          <div className="mb-8 p-4 bg-blue-600/10 border border-blue-500/50 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+             <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                   <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                   </svg>
+                </div>
+                <p className="text-sm text-blue-100">Please verify your email to enable all features.</p>
+             </div>
+             <div className="flex items-center gap-3">
+                {message && <span className="text-xs text-blue-400">{message}</span>}
+                <Button 
+                  onClick={handleResend} 
+                  disabled={resending}
+                  className="bg-blue-600 hover:bg-blue-700 text-xs h-8 px-4"
+                >
+                  {resending ? "Sending..." : "Resend Link"}
+                </Button>
+             </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-12">
           <div>
             <h1 className="text-3xl font-bold">Welcome back, {userData?.name || user.displayName || "Builder"}!</h1>
