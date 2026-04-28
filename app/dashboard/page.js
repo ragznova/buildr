@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CreateProjectModal from "@/components/dashboard/CreateProjectModal";
 import Image from "next/image";
+import Link from "next/link";
 
 const stats = [
   { label: "Total Projects", value: "projectCount", icon: "📁" },
@@ -144,14 +145,17 @@ export default function DashboardPage() {
                          className="object-cover group-hover:scale-110 transition-transform duration-500 opacity-60"
                        />
                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                          <Button size="icon" className="bg-blue-600 hover:bg-blue-700 rounded-full w-12 h-12">
-                             <Edit3 size={20} />
-                          </Button>
+                          <Link href={`/dashboard/canvas/${project.id}`}>
+                            <Button size="icon" className="bg-blue-600 hover:bg-blue-700 rounded-full w-12 h-12">
+                               <Edit3 size={20} />
+                            </Button>
+                          </Link>
                           <Button size="icon" variant="outline" className="border-white/20 bg-white/10 backdrop-blur-md rounded-full w-12 h-12 text-white">
                              <ExternalLink size={20} />
                           </Button>
                        </div>
                     </div>
+
 
                     {/* Info Area */}
                     <div className="p-6">
