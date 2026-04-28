@@ -145,11 +145,13 @@ export default function DashboardPage() {
                          className="object-cover group-hover:scale-110 transition-transform duration-500 opacity-60"
                        />
                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                          <Link href={`/dashboard/canvas/${project.id}`}>
-                            <Button size="icon" className="bg-blue-600 hover:bg-blue-700 rounded-full w-12 h-12">
-                               <Edit3 size={20} />
-                            </Button>
+                          <Link 
+                            href={`/dashboard/canvas/${project.id}`}
+                            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 rounded-full w-12 h-12 transition-all hover:scale-110 shadow-lg shadow-blue-600/40"
+                          >
+                             <Edit3 size={20} className="text-white" />
                           </Link>
+
                           <Button size="icon" variant="outline" className="border-white/20 bg-white/10 backdrop-blur-md rounded-full w-12 h-12 text-white">
                              <ExternalLink size={20} />
                           </Button>
