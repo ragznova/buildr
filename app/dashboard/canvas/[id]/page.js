@@ -5,7 +5,15 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { db } from "@/lib/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
-import CanvasEditor from "@/components/canvas/CanvasEditor";
+import dynamic from "next/dynamic";
+const CanvasEditor = dynamic(() => import("@/components/canvas/CanvasEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-screen w-full bg-[#0A0A0A] flex items-center justify-center">
+       <Loader2 className="animate-spin text-blue-500" size={32} />
+    </div>
+  )
+});
 import { Loader2 } from "lucide-react";
 
 export default function CanvasPage() {
