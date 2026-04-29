@@ -15,6 +15,11 @@ export default function PreviewPage() {
 
   useEffect(() => {
     const fetchProject = async () => {
+      if (!db || !params.id) {
+        console.warn("[PREVIEW DEBUG] DB or ID not ready.");
+        return;
+      }
+      
       console.log("[PREVIEW DEBUG] Fetching project with ID:", params.id);
       try {
         const docRef = doc(db, "projects", params.id);

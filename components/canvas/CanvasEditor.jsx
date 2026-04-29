@@ -106,7 +106,7 @@ export default function CanvasEditor({ project }) {
 
   // --- Save to Firebase ---
   const saveCanvas = useCallback(async () => {
-    if (!fabricRef.current || !project?.id) return;
+    if (!fabricRef.current || !project?.id || !db) return;
     setIsSaving(true);
     try {
       const json = fabricRef.current.toJSON();
