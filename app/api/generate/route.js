@@ -40,25 +40,32 @@ export async function POST(req) {
       </html>
     `;
 
-    console.log(`[SIMPLE ENGINE] Generating HTML for: ${prompt}`);
+    console.log("[AI ROUTER] API called with prompt:", prompt);
 
     let htmlOutput = "";
 
     try {
+      console.log("[AI ROUTER] Attempting Gemini generation...");
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
       const result = await model.generateContent(masterPrompt);
       htmlOutput = result.response.text();
+      console.log("[AI ROUTER] Gemini Response received. Length:", htmlOutput.length);
     } catch (err) {
-      console.log("[FALLBACK] Using Groq Llama 3.3...");
+      console.log("[AI ROUTER] Gemini failed, falling back to Groq...", err.message);
       const groqResponse = await groq.chat.completions.create({
         messages: [{ role: "user", content: masterPrompt }],
         model: "llama-3.3-70b-versatile",
       });
       htmlOutput = groqResponse.choices[0].message.content;
+      console.log("[AI ROUTER] Groq Response received. Length:", htmlOutput.length);
     }
 
     // Final cleanup to ensure no markdown backticks
     htmlOutput = htmlOutput.replace(/```html/g, "").replace(/```/g, "").trim();
+
+    if (!htmlOutput) {
+      console.error("[AI ROUTER] CRITICAL: AI returned empty response!");
+    }
 
     return NextResponse.json({ success: true, html: htmlOutput });
 
