@@ -221,14 +221,26 @@ export default function GenerationModal({ isOpen, onClose, canvasData, onGenerat
               </div>
            </div>
 
-           <Button 
-             onClick={handleSubmit}
-             disabled={!prompt && !url && files.length === 0}
-             className="bg-blue-600 hover:bg-blue-700 h-14 px-10 rounded-full shadow-[0_0_40px_rgba(59,130,246,0.3)] group transition-all hover:scale-105 active:scale-95"
-           >
-              <span className="font-black tracking-tight text-lg uppercase mr-3">Start Building</span>
-              <Sparkles className="group-hover:rotate-12 transition-transform text-white" size={20} />
-           </Button>
+           <div className="flex items-center gap-3">
+              <Button 
+                variant="outline"
+                onClick={() => onGenerate({ prompt: "Generate based ONLY on my drawing layout.", activeTab: "drawing", canvasData })}
+                disabled={!canvasData || canvasData.objects?.length === 0}
+                className="border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white h-14 px-8 rounded-full flex gap-3 transition-all active:scale-95"
+              >
+                 <ImageIcon size={18} />
+                 <span className="font-bold tracking-tight uppercase">Build from Sketch</span>
+              </Button>
+
+              <Button 
+                onClick={handleSubmit}
+                disabled={!prompt && !url && files.length === 0}
+                className="bg-blue-600 hover:bg-blue-700 h-14 px-10 rounded-full shadow-[0_0_40px_rgba(59,130,246,0.3)] group transition-all hover:scale-105 active:scale-95"
+              >
+                 <span className="font-black tracking-tight text-lg uppercase mr-3">Start Building</span>
+                 <Sparkles className="group-hover:rotate-12 transition-transform text-white" size={20} />
+              </Button>
+           </div>
         </div>
       </motion.div>
     </div>

@@ -85,14 +85,23 @@ export default function CanvasEditor({ project }) {
 
   // Handle Dynamic Resizing
   useEffect(() => {
-    if (fabricRef.current) {
-      const sidebarWidth = isSidebarCollapsed ? 80 : 256;
-      fabricRef.current.setDimensions({
-        width: window.innerWidth - sidebarWidth - 300,
-        height: window.innerHeight - 64
-      });
-      fabricRef.current.renderAll();
-    }
+    const handleResize = () => {
+      if (fabricRef.current) {
+        const sidebarWidth = isSidebarCollapsed ? 80 : 256;
+        const availableWidth = window.innerWidth - sidebarWidth - 340; // More padding for properties
+        const availableHeight = window.innerHeight - 100; // More padding for toolbar
+        
+        fabricRef.current.setDimensions({
+          width: Math.max(800, availableWidth),
+          height: Math.max(600, availableHeight)
+        });
+        fabricRef.current.renderAll();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Initial call
+    return () => window.removeEventListener("resize", handleResize);
   }, [isSidebarCollapsed]);
 
   // --- Save to Firebase ---
