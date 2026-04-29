@@ -167,7 +167,7 @@ export default function GenerationModal({ isOpen, onClose, canvasData, onGenerat
                    <div className="grid grid-cols-4 gap-4">
                       {files.map((file, idx) => (
                         <div key={idx} className="aspect-square bg-zinc-900 rounded-2xl relative overflow-hidden border border-zinc-800 group">
-                           <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" />
+                           <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
                            <button 
                              onClick={() => setFiles(files.filter((_, i) => i !== idx))}
                              className="absolute top-2 right-2 p-1 bg-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"

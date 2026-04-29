@@ -120,7 +120,7 @@ export default function PreviewPage() {
                         </div>
                         <p className="text-zinc-500 text-lg max-w-xl mx-auto">
                            This is a real-time preview of the Next.js components generated from your prompt: 
-                           <span className="text-white italic"> "{project?.prompt || 'Sketch Layout'}"</span>
+                           <span className="text-white italic"> &quot;{project?.prompt || 'Sketch Layout'}&quot;</span>
                         </p>
                         <div className="flex justify-center gap-4 pt-6">
                            <div className="w-40 h-14 bg-blue-600 rounded-full" />
