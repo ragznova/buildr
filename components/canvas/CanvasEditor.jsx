@@ -7,13 +7,15 @@ import PropertiesPanel from "./PropertiesPanel";
 import Toolbar from "./Toolbar";
 import { firestore as db } from "@/lib/firebase/config";
 import { doc, updateDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Monitor, Smartphone, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import GenerationModal from "./GenerationModal";
 import { useUIStore } from "@/store/useUIStore";
 
 export default function CanvasEditor({ project }) {
+  const router = useRouter();
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
   const { isSidebarCollapsed } = useUIStore();
@@ -23,6 +25,7 @@ export default function CanvasEditor({ project }) {
   const [isSaving, setIsSaving] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isGenModalOpen, setIsGenModalOpen] = useState(false);
 
   // Initialize Canvas
   useEffect(() => {
@@ -165,14 +168,47 @@ export default function CanvasEditor({ project }) {
     });
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async (data) => {
+    setIsGenModalOpen(false);
     setIsGenerating(true);
-    // Real-time "AI Processing" simulation
-    setTimeout(() => {
-       // This will be the point where we pass data to M6 (AI Engine)
-       setIsGenerating(false);
-       alert("Design Analysis Complete! Milestone 6 will now take this JSON and turn it into a Website.");
-    }, 4000);
+    
+    // Convert Canvas JSON to Description (Structural Bridge)
+    const canvasObjects = fabricRef.current?.toJSON().objects || [];
+    const layoutDesc = canvasObjects.map(obj => `${obj.type} at x:${Math.round(obj.left)}, y:${Math.round(obj.top)}`).join(", ");
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          ...data, 
+          layoutDesc,
+          userPlan: project?.userPlan || "free" 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Save generated code to Firestore
+        await updateDoc(doc(db, "projects", project.id), {
+          generatedCode: result.code,
+          prompt: data.prompt,
+          generationMetadata: result.metadata,
+          updatedAt: new Date(),
+        });
+
+        // Redirect to preview
+        router.push(`/dashboard/preview/${project.id}`);
+      } else {
+        alert("Generation failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Generation Error:", err);
+      alert("A network error occurred during generation.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Zoom implementation
@@ -230,6 +266,13 @@ export default function CanvasEditor({ project }) {
         onOpenTemplates={() => setIsTemplatesOpen(true)}
       />
       
+      <GenerationModal 
+        isOpen={isGenModalOpen} 
+        onClose={() => setIsGenModalOpen(false)} 
+        canvasData={fabricRef.current?.toJSON()}
+        onGenerate={handleGenerate}
+      />
+
       <div className="flex flex-grow overflow-hidden relative">
         <ToolPanel 
           activeTool={activeTool} 
@@ -261,7 +304,7 @@ export default function CanvasEditor({ project }) {
            {/* AI Floating Buttons */}
            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50">
               <Button 
-                onClick={handleGenerate}
+                onClick={() => setIsGenModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 h-14 px-8 rounded-full shadow-[0_0_40px_rgba(59,130,246,0.4)] flex gap-3 group transition-all hover:scale-105 active:scale-95"
               >
                  <Sparkles className="group-hover:rotate-12 transition-transform" />
