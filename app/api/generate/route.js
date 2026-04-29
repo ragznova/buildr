@@ -40,13 +40,29 @@ export async function POST(req) {
       5. Has smooth hover effects and micro-animations.
       6. Includes all sections (Header, Hero, Features, Grid, Footer) as drawn.
 
-      RULES:
-      - Return ONLY the complete React component code.
-      - NO explanations.
-      - NO markdown code blocks (no backticks).
-      - Start directly with: import React from 'react';
+      STRICT RULES FOR CODE GENERATION:
+      1. Use ONLY these libraries for imports:
+         - import { useState, useEffect } from 'react'
+         - import { motion, AnimatePresence } from 'framer-motion'
+         - import { X, Menu, Star, Check, ArrowRight, Github, Twitter, Instagram } from 'lucide-react'
+         - import Link from 'next/link'
+      
+      2. NEVER import or use:
+         - lucide-react-native ❌
+         - react-router-dom ❌
+         - react-icons ❌
+         - any library NOT in the list above ❌
+
+      3. COMPONENT STRUCTURE:
+         - Every component MUST start with 'use client'
+         - MUST export default function Page()
+         - Use Tailwind CSS classes ONLY
+         - All code must be self-contained in ONE FILE.
+
+      OUTPUT RULES:
+      - Return ONLY the raw code.
+      - NO markdown code blocks.
       - Make it look like a real ₹50,000 premium website.
-      - Ensure all tailwind classes are properly used for a polished finish.
     `;
 
     console.log(`[AI ROUTER] Initializing Multi-Model Generation for ${userPlan}...`);
