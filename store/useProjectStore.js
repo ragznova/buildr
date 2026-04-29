@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { 
-  firestore as db 
+  db 
 } from "@/lib/firebase/config";
 import { 
   collection, 

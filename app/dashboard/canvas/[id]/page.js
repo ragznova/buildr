@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-import { firestore as db } from "@/lib/firebase/config";
+import { db } from "@/lib/firebase/config";
 import { doc, getDoc } from "firebase/firestore";
 import CanvasEditor from "@/components/canvas/CanvasEditor";
 import { Loader2 } from "lucide-react";

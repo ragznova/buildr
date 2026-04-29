@@ -5,7 +5,7 @@ import * as fabric from "fabric";
 import ToolPanel from "./ToolPanel";
 import PropertiesPanel from "./PropertiesPanel";
 import Toolbar from "./Toolbar";
-import { firestore as db } from "@/lib/firebase/config";
+import { db } from "@/lib/firebase/config";
 import { doc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";

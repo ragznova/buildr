@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { 
   auth, 
-  firestore as db 
+  db 
 } from "@/lib/firebase/config";
 import { 
   onAuthStateChanged, 
