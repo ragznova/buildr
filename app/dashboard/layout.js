@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/dashboard/Sidebar";
+import { useUIStore } from "@/store/useUIStore";
 
 export default function DashboardLayout({ children }) {
   const { user, loading } = useAuthStore();
+  const { isSidebarCollapsed } = useUIStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function DashboardLayout({ children }) {
       <div className="hidden md:block">
         <Sidebar />
       </div>
-      <main className="flex-grow md:ml-64 min-h-screen relative">
+      <main className={`flex-grow ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} min-h-screen relative transition-all duration-300 ease-in-out`}>
         {children}
       </main>
     </div>

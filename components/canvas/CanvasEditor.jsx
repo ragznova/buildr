@@ -11,9 +11,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Monitor, Smartphone, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { useUIStore } from "@/store/useUIStore";
+
 export default function CanvasEditor({ project }) {
   const canvasRef = useRef(null);
   const fabricRef = useRef(null);
+  const { isSidebarCollapsed } = useUIStore();
   const [activeTool, setActiveTool] = useState("select");
   const [selectedObject, setSelectedObject] = useState(null);
   const [zoom, setZoom] = useState(100);
@@ -23,8 +26,9 @@ export default function CanvasEditor({ project }) {
 
   // Initialize Canvas
   useEffect(() => {
+    const sidebarWidth = isSidebarCollapsed ? 80 : 256;
     const canvas = new fabric.Canvas(canvasRef.current, {
-      width: window.innerWidth - 560, // Tool + Properties panels
+      width: window.innerWidth - sidebarWidth - 300, // Sidebar + Properties panel
       height: window.innerHeight - 64, // Toolbar
       backgroundColor: "#1A1A1A",
       preserveObjectStacking: true,
@@ -48,15 +52,23 @@ export default function CanvasEditor({ project }) {
     canvas.on("selection:updated", (e) => setSelectedObject(e.selected[0]));
     canvas.on("selection:cleared", () => setSelectedObject(null));
     canvas.on("object:modified", () => saveHistory());
-    canvas.on("object:added", () => saveHistory());
+    canvas.on("object:added", (e) => {
+      if (!e.target._fromJSON) saveHistory();
+    });
+    canvas.on("path:created", () => saveHistory()); // Save history after pencil stroke
 
     // Shortcuts
     const handleKeyDown = (e) => {
+      // Don't delete if we are typing in a text box!
+      const activeObject = canvas.getActiveObject();
+      if (activeObject && activeObject.isEditing) return;
+
       if (e.key === "Delete" || e.key === "Backspace") {
         const activeObjects = canvas.getActiveObjects();
         canvas.remove(...activeObjects);
         canvas.discardActiveObject();
         canvas.renderAll();
+        saveHistory();
       }
     };
 
@@ -67,6 +79,18 @@ export default function CanvasEditor({ project }) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [project]);
+
+  // Handle Dynamic Resizing
+  useEffect(() => {
+    if (fabricRef.current) {
+      const sidebarWidth = isSidebarCollapsed ? 80 : 256;
+      fabricRef.current.setDimensions({
+        width: window.innerWidth - sidebarWidth - 300,
+        height: window.innerHeight - 64
+      });
+      fabricRef.current.renderAll();
+    }
+  }, [isSidebarCollapsed]);
 
   // --- Save to Firebase ---
   const saveCanvas = async () => {
