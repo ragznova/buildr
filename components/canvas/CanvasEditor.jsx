@@ -81,7 +81,7 @@ export default function CanvasEditor({ project }) {
       canvas.dispose();
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [project]);
+  }, [project, isSidebarCollapsed, saveHistory]);
 
   // Handle Dynamic Resizing
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function CanvasEditor({ project }) {
   }, [isSidebarCollapsed]);
 
   // --- Save to Firebase ---
-  const saveCanvas = async () => {
+  const saveCanvas = useCallback(async () => {
     if (!fabricRef.current || !project?.id) return;
     setIsSaving(true);
     try {
@@ -119,13 +119,13 @@ export default function CanvasEditor({ project }) {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [project?.id]);
 
   // Auto-save
   useEffect(() => {
     const timer = setInterval(saveCanvas, 30000);
     return () => clearInterval(timer);
-  }, [project?.id]);
+  }, [saveCanvas]);
 
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
