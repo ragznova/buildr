@@ -228,11 +228,11 @@ export default function CanvasEditor({ project }) {
       const result = await response.json();
 
       if (result.success) {
-        // Save generated code to Firestore
+        // Save generated code to Firestore (Both HTML and JSX)
         await updateDoc(doc(db, "projects", project.id), {
-          generatedCode: result.code,
+          generatedHtml: result.html,
+          generatedCode: result.jsx,
           prompt: data.prompt,
-          generationMetadata: result.metadata,
           updatedAt: new Date(),
         });
 
