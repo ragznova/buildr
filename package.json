@@ -20,6 +20,7 @@
     "clsx": "^2.1.1",
     "fabric": "^7.3.1",
     "firebase": "^12.12.1",
+    "firebase-admin": "^13.8.0",
     "framer-motion": "^12.38.0",
     "gsap": "^3.15.0",
     "howler": "^2.2.4",

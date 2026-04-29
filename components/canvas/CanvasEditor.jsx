@@ -221,6 +221,7 @@ export default function CanvasEditor({ project }) {
         body: JSON.stringify({ 
           ...data, 
           layoutDesc,
+          projectId: project.id,
           userPlan: project?.userPlan || "free" 
         }),
       });
@@ -229,17 +230,7 @@ export default function CanvasEditor({ project }) {
 
       if (result.success) {
         console.log("[CANVAS BRIDGE] AI returned HTML. Length:", result.html?.length);
-        console.log("[CANVAS BRIDGE] Saving to Project ID:", project.id);
-
-        // Save generated HTML to Firestore
-        await updateDoc(doc(db, "projects", project.id), {
-          generatedHTML: result.html,
-          prompt: data.prompt,
-          status: 'generated',
-          updatedAt: new Date(),
-        });
-        
-        console.log("[CANVAS BRIDGE] Saved to Firebase ✅");
+        console.log("[CANVAS BRIDGE] Server handled the Firebase save ✅");
 
         // Redirect to preview
         router.push(`/dashboard/preview/${project.id}`);
