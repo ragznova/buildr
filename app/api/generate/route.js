@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 
-// AI Router Config
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
 const groq = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
@@ -12,81 +11,58 @@ const groq = new OpenAI({
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { prompt, activeTab, canvasData, url, language, layoutDesc, userPlan = "free" } = body;
+    const { prompt, layoutDesc } = body;
 
     const masterPrompt = `
-      You are BUILDR AI, the world's best website generator. 
-      The user wants a premium website based on this layout:
-      [CANVAS_DESCRIPTION]
-      ${layoutDesc}
-
-      User Intent: "${prompt || "A luxury modern website"}"
-      Language: ${language}
-
-      STRICT OUTPUT FORMAT:
-      You must return a JSON object with two fields: "html" and "jsx".
+      Return ONLY a complete, single-file HTML website.
       
-      FIELD 1: "html"
-      - A complete, self-contained <!DOCTYPE html> file.
-      - Use <script src="https://cdn.tailwindcss.com"></script> for styling.
-      - Include Lucide icons via CDN if needed.
-      - Use <script src="https://unpkg.com/framer-motion/dist/framer-motion.js"></script> for animations.
-      - This must be a STUNNING, unique website based on the user's sketch.
-      - Include real content related to "${prompt}".
+      STRICT RULES:
+      - Use Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>
+      - Use Lucide Icons or FontAwesome via CDN if needed.
+      - NO React. NO JSX. NO imports. NO markdown backticks.
+      - Start directly with <!DOCTYPE html>
+      - Make it a professional, ₹50,000-quality unique website.
+      - Content must be specific to: "${prompt}"
+      - Follow this layout blueprint: ${layoutDesc}
 
-      FIELD 2: "jsx"
-      - The same website but written as a Next.js React component.
-      - import { motion } from 'framer-motion';
-      - import { Star, Check, ArrowRight } from 'lucide-react';
-      - Use 'use client'; and export default function Page().
-
-      RULES:
-      - NO markdown formatting.
-      - NO explanations.
-      - Return ONLY the raw JSON object.
+      Structure:
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>${prompt}</title>
+      </head>
+      <body class="bg-black text-white">
+        <!-- AI generates STUNNING unique content here -->
+      </body>
+      </html>
     `;
 
-    console.log(`[AI ROUTER] Generating Dual-Format Preview for ${userPlan}...`);
+    console.log(`[SIMPLE ENGINE] Generating HTML for: ${prompt}`);
 
-    let resultText = "";
-    let modelUsed = "";
+    let htmlOutput = "";
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
       const result = await model.generateContent(masterPrompt);
-      resultText = result.response.text();
-      modelUsed = "gemini-1.5-flash";
+      htmlOutput = result.response.text();
     } catch (err) {
-      console.error("[TIER 1 FAILED] Falling back to Groq...");
+      console.log("[FALLBACK] Using Groq Llama 3.3...");
       const groqResponse = await groq.chat.completions.create({
         messages: [{ role: "user", content: masterPrompt }],
         model: "llama-3.3-70b-versatile",
-        response_format: { type: "json_object" }
       });
-      resultText = groqResponse.choices[0].message.content;
-      modelUsed = "groq-llama-3.3";
+      htmlOutput = groqResponse.choices[0].message.content;
     }
 
-    // Parse JSON safely
-    let finalData;
-    try {
-      // Strip potential markdown backticks if AI ignored instructions
-      const cleanedText = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
-      finalData = JSON.parse(cleanedText);
-    } catch (e) {
-      console.error("JSON Parse Error, returning raw text as fallback");
-      finalData = { html: resultText, jsx: resultText };
-    }
+    // Final cleanup to ensure no markdown backticks
+    htmlOutput = htmlOutput.replace(/```html/g, "").replace(/```/g, "").trim();
 
-    return NextResponse.json({ 
-      success: true, 
-      html: finalData.html,
-      jsx: finalData.jsx,
-      modelUsed: modelUsed
-    });
+    return NextResponse.json({ success: true, html: htmlOutput });
 
   } catch (error) {
-    console.error("Critical AI Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
