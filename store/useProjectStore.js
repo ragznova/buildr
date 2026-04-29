@@ -22,7 +22,10 @@ export const useProjectStore = create((set, get) => ({
 
   // Fetch projects for a specific user
   fetchProjects: (userId) => {
-    if (!userId) return;
+    if (!userId || !db) {
+      if (!db) console.error("[PROJECT STORE] Database is not initialized. Check your environment variables.");
+      return;
+    }
     set({ loading: true });
     
     const q = query(collection(db, "projects"), where("userId", "==", userId));
