@@ -181,9 +181,38 @@ export default function CanvasEditor({ project }) {
     setIsGenModalOpen(false);
     setIsGenerating(true);
     
-    // Convert Canvas JSON to Description (Structural Bridge)
+    // FIX 1 — CANVAS TO DESCRIPTION CONVERTER (Fabric.js JSON -> Human Story)
     const canvasObjects = fabricRef.current?.toJSON().objects || [];
-    const layoutDesc = canvasObjects.map(obj => `${obj.type} at x:${Math.round(obj.left)}, y:${Math.round(obj.top)}`).join(", ");
+    const canvasWidth = fabricRef.current?.width || 1200;
+    const canvasHeight = fabricRef.current?.height || 800;
+
+    const describeLayout = () => {
+      if (canvasObjects.length === 0) return "No wireframe provided. Generate a creative layout from scratch.";
+      
+      let description = "The user drew a wireframe with the following elements:\n";
+      
+      canvasObjects.forEach((obj, i) => {
+        const isTop = obj.top < canvasHeight * 0.2;
+        const isBottom = obj.top > canvasHeight * 0.8;
+        const isMiddle = !isTop && !isBottom;
+        
+        const isFullWidth = obj.width * obj.scaleX > canvasWidth * 0.8;
+        const isSmall = (obj.width * obj.scaleX * obj.height * obj.scaleY) < (canvasWidth * canvasHeight * 0.05);
+        
+        let position = isTop ? "at the TOP (HEADER AREA)" : isBottom ? "at the BOTTOM (FOOTER AREA)" : "in the MIDDLE (CONTENT AREA)";
+        let size = isFullWidth ? "LARGE FULL-WIDTH" : isSmall ? "SMALL" : "MEDIUM";
+        let type = obj.type === "rect" ? "Rectangle" : obj.type === "circle" ? "Circle" : obj.type === "i-text" ? "Text Label" : "Shape";
+
+        description += `- A ${size} ${type} ${position}. `;
+        if (obj.text) description += `Label: "${obj.text}". `;
+        description += "\n";
+      });
+
+      return description;
+    };
+
+    const layoutDesc = describeLayout();
+    console.log("[AI BRIDGE] Generated Description:", layoutDesc);
 
     try {
       const response = await fetch("/api/generate", {

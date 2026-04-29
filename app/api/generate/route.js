@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 
+// AI Router Config
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
 const groq = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
   baseURL: "https://api.groq.com/openai/v1",
+});
+const openai = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 });
 
 export async function POST(req) {
@@ -13,81 +17,96 @@ export async function POST(req) {
     const body = await req.json();
     const { prompt, activeTab, canvasData, files, url, language, layoutDesc, userPlan = "free" } = body;
 
+    // FIX 2 — STRONG MASTER PROMPT
     const masterPrompt = `
-      You are BUILDR AI, a world-class frontend engineer and UI/UX designer.
-      Task: Generate a high-quality, production-ready React component using Next.js and Tailwind CSS.
+      You are BUILDR AI, the world's best website generator. 
+      Your mission is to generate a premium, high-converting website component.
 
-      CONTEXT:
-      - Project Name: ${prompt || "AI Project"}
-      - User Intent: ${prompt}
-      - Input Method: ${activeTab}
-      - Detected Language: ${language}
-      - Drawing/Sketch Layout: ${layoutDesc || "No drawing provided"}
-      - Reference URL Structure: ${url || "None"}
-      
-      TECHNICAL SPECS:
-      - Framework: Next.js (App Router compatible).
-      - Styling: Tailwind CSS (Mobile-first, responsive).
-      - Icons: Lucide React.
-      - Theme: Modern, dark-themed (unless prompt specifies otherwise).
-      - Tone: Professional, premium, and clean.
+      [CANVAS_DESCRIPTION]
+      ${layoutDesc}
 
-      REQUIREMENTS:
-      1. Create a complete landing page structure including Header, Hero, Features, and Footer.
-      2. If a Drawing Layout is provided, follow the positions of elements strictly.
-      3. Use vibrant colors and smooth transitions.
-      4. Ensure all Tailwind classes are valid and descriptive.
-      5. Include sample text content in ${language}.
+      User's additional instructions: 
+      "${prompt || "Generate a creative high-end design"}"
 
-      OUTPUT RULES:
-      - Return ONLY the raw code.
-      - NO markdown formatting (no backticks, no "javascript" header).
+      Business type detected: ${prompt || "General Premium"}
+      Preferred language: ${language || "English"}
+      Tech stack: React + Tailwind CSS + Lucide Icons + Framer Motion
+
+      GENERATE A COMPLETE, UNIQUE, PRODUCTION-READY website that:
+      1. Follows the EXACT layout from drawing described above.
+      2. Has real content related to the user's prompt (NOT lorem ipsum).
+      3. Uses a beautiful, premium DARK THEME by default.
+      4. Is fully mobile responsive and highly interactive.
+      5. Has smooth hover effects and micro-animations.
+      6. Includes all sections (Header, Hero, Features, Grid, Footer) as drawn.
+
+      RULES:
+      - Return ONLY the complete React component code.
       - NO explanations.
-      - MUST start with "import React from 'react';".
+      - NO markdown code blocks (no backticks).
+      - Start directly with: import React from 'react';
+      - Make it look like a real ₹50,000 premium website.
+      - Ensure all tailwind classes are properly used for a polished finish.
     `;
 
-    console.log(`[AI ROUTER] Attempting Generation for ${userPlan} user...`);
+    console.log(`[AI ROUTER] Initializing Multi-Model Generation for ${userPlan}...`);
 
     let text = "";
     let modelUsed = "";
 
+    // FIX 4 — TRIPLE FALLBACK (NO HARDCODED TEMPLATES)
     try {
-      console.log("[AI ROUTER] Trying Gemini (Flash Latest)...");
+      console.log("[TIER 1] Trying Gemini 1.5 Flash...");
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
       const result = await model.generateContent(masterPrompt);
       const response = await result.response;
       text = response.text();
-      modelUsed = "gemini-1.5-flash-latest";
-    } catch (geminiError) {
-      console.error("[AI ROUTER] Gemini Failed, falling back to Groq...", geminiError.message);
-      
-      const groqResponse = await groq.chat.completions.create({
-        messages: [{ role: "user", content: masterPrompt }],
-        model: "llama-3.3-70b-versatile",
-      });
-      
-      text = groqResponse.choices[0].message.content;
-      modelUsed = "groq-llama-3.3-70b";
+      modelUsed = "gemini-1.5-flash";
+    } catch (err1) {
+      console.error("[TIER 1 FAILED] Moving to Groq...", err1.message);
+      try {
+        console.log("[TIER 2] Trying Groq (Llama 3.3)...");
+        const groqResponse = await groq.chat.completions.create({
+          messages: [{ role: "user", content: masterPrompt }],
+          model: "llama-3.3-70b-versatile",
+          temperature: 0.2,
+        });
+        text = groqResponse.choices[0].message.content;
+        modelUsed = "groq-llama-3.3";
+      } catch (err2) {
+        console.error("[TIER 2 FAILED] Moving to OpenAI...", err2.message);
+        try {
+          console.log("[TIER 3] Trying OpenAI (GPT-4o Mini)...");
+          const oaiResponse = await openai.chat.completions.create({
+            messages: [{ role: "user", content: masterPrompt }],
+            model: "gpt-4o-mini",
+            temperature: 0.2,
+          });
+          text = oaiResponse.choices[0].message.content;
+          modelUsed = "openai-gpt-4o-mini";
+        } catch (err3) {
+          console.error("[ALL TIERS FAILED] No backup remaining.");
+          throw new Error("AI Generation failed across all redundant models. Please check your API keys or quota.");
+        }
+      }
     }
 
-    // Clean up any potential markdown leftovers
-    text = text.replace(/```javascript/g, "").replace(/```jsx/g, "").replace(/```/g, "").trim();
+    // Post-generation cleanup
+    text = text.replace(/```javascript/g, "")
+               .replace(/```jsx/g, "")
+               .replace(/```/g, "")
+               .replace(/import React from 'react';/i, "import React from 'react';")
+               .trim();
 
     return NextResponse.json({ 
       success: true, 
       code: text,
       modelUsed: modelUsed,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        plan: userPlan
-      }
+      metadata: { timestamp: new Date().toISOString() }
     });
 
   } catch (error) {
-    console.error("AI Router Critical Error:", error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message || "Failed to generate code." 
-    }, { status: 500 });
+    console.error("Critical AI Error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
