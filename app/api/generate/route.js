@@ -17,8 +17,8 @@ export async function POST(req) {
 
     console.log(`[AI ROUTER] Initializing Real Gemini Generation for ${userPlan} user...`);
 
-    // Use gemini-1.5-flash for Free users (faster, less timeouts), pro for Pro users
-    const modelName = userPlan === "pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
+    // Use gemini-pro for stability
+    const modelName = "gemini-pro";
     const model = genAI.getGenerativeModel({ model: modelName });
 
     const masterPrompt = `
