@@ -32,6 +32,11 @@ export const useAuthStore = create(
       // Initialize listener
       init: () => {
         set({ loading: true });
+        if (!auth) {
+          console.error("[AUTH STORE] Firebase Auth is not initialized. Check your environment variables.");
+          set({ loading: false });
+          return () => {};
+        }
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
           if (user) {
             set({ user });
