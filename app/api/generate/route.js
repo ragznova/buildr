@@ -63,11 +63,11 @@ export async function POST(req) {
       
       const groqResponse = await groq.chat.completions.create({
         messages: [{ role: "user", content: masterPrompt }],
-        model: "llama-3.1-70b-versatile",
+        model: "llama-3.3-70b-versatile",
       });
       
       text = groqResponse.choices[0].message.content;
-      modelUsed = "groq-llama-3.1-70b";
+      modelUsed = "groq-llama-3.3-70b";
     }
 
     // Clean up any potential markdown leftovers
