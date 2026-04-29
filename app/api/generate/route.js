@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+const groq = new OpenAI({
+  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 export async function POST(req) {
   try {
     const body = await req.json();
     const { prompt, activeTab, canvasData, files, url, language, layoutDesc, userPlan = "free" } = body;
-
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "AIzaSyAmyzzOaXV24JsriRqBceBI9VkYqFiqQVU";
-    
-    if (!apiKey) {
-      console.error("[AI ERROR] Gemini API Key is missing from environment variables.");
-      return NextResponse.json({ success: false, error: "API Key Missing" }, { status: 500 });
-    }
-
-    console.log(`[AI ROUTER] Initializing Real Gemini Generation for ${userPlan} user...`);
-
-    // Use gemini-pro for stability
-    const modelName = "gemini-pro";
-    const model = genAI.getGenerativeModel({ model: modelName });
 
     const masterPrompt = `
       You are BUILDR AI, a world-class frontend engineer and UI/UX designer.
@@ -54,17 +46,37 @@ export async function POST(req) {
       - MUST start with "import React from 'react';".
     `;
 
-    const result = await model.generateContent(masterPrompt);
-    const response = await result.response;
-    let text = response.text();
+    console.log(`[AI ROUTER] Attempting Generation for ${userPlan} user...`);
 
-    // Clean up any potential markdown leftovers from the AI
+    let text = "";
+    let modelUsed = "";
+
+    try {
+      console.log("[AI ROUTER] Trying Gemini (Flash Latest)...");
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+      const result = await model.generateContent(masterPrompt);
+      const response = await result.response;
+      text = response.text();
+      modelUsed = "gemini-1.5-flash-latest";
+    } catch (geminiError) {
+      console.error("[AI ROUTER] Gemini Failed, falling back to Groq...", geminiError.message);
+      
+      const groqResponse = await groq.chat.completions.create({
+        messages: [{ role: "user", content: masterPrompt }],
+        model: "llama-3.1-70b-versatile",
+      });
+      
+      text = groqResponse.choices[0].message.content;
+      modelUsed = "groq-llama-3.1-70b";
+    }
+
+    // Clean up any potential markdown leftovers
     text = text.replace(/```javascript/g, "").replace(/```jsx/g, "").replace(/```/g, "").trim();
 
     return NextResponse.json({ 
       success: true, 
       code: text,
-      modelUsed: "gemini-1.5-pro",
+      modelUsed: modelUsed,
       metadata: {
         timestamp: new Date().toISOString(),
         plan: userPlan
@@ -72,7 +84,7 @@ export async function POST(req) {
     });
 
   } catch (error) {
-    console.error("Gemini Generation Error:", error);
+    console.error("AI Router Critical Error:", error);
     return NextResponse.json({ 
       success: false, 
       error: error.message || "Failed to generate code." 
