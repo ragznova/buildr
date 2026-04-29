@@ -210,7 +210,7 @@ export default function CanvasEditor({ project }) {
         // Redirect to preview
         router.push(`/dashboard/preview/${project.id}`);
       } else {
-        alert("Generation failed. Please try again.");
+        alert(`Generation failed: ${result.error || "Unknown Error"}`);
       }
     } catch (err) {
       console.error("Generation Error:", err);

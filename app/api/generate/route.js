@@ -8,9 +8,18 @@ export async function POST(req) {
     const body = await req.json();
     const { prompt, activeTab, canvasData, files, url, language, layoutDesc, userPlan = "free" } = body;
 
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "AIzaSyAmyzzOaXV24JsriRqBceBI9VkYqFiqQVU";
+    
+    if (!apiKey) {
+      console.error("[AI ERROR] Gemini API Key is missing from environment variables.");
+      return NextResponse.json({ success: false, error: "API Key Missing" }, { status: 500 });
+    }
+
     console.log(`[AI ROUTER] Initializing Real Gemini Generation for ${userPlan} user...`);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    // Use gemini-1.5-flash for Free users (faster, less timeouts), pro for Pro users
+    const modelName = userPlan === "pro" ? "gemini-1.5-pro" : "gemini-1.5-flash";
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     const masterPrompt = `
       You are BUILDR AI, a world-class frontend engineer and UI/UX designer.
