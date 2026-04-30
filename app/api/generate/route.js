@@ -2,7 +2,7 @@ export async function POST(req) {
   try {
     const { prompt } = await req.json()
     
-    console.log("[AI SERVER] Generation started with GROQ for:", prompt);
+    console.log("[AI SERVER] Generation started with GROQ (Llama 3.1) for:", prompt);
     
     const response = await fetch(
       'https://api.groq.com/openai/v1/chat/completions',
@@ -13,7 +13,7 @@ export async function POST(req) {
           'Authorization': 'Bearer ' + process.env.NEXT_PUBLIC_GROQ_API_KEY
         },
         body: JSON.stringify({
-          model: 'llama3-70b-8192',
+          model: 'llama-3.1-70b-versatile',
           messages: [
             {
               role: 'system',
